@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>두근두근타운 도감</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8f8f6; color: #1a1a1a; min-height: 100vh; }
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; }
+  .header-title h1 { font-size: 1.1rem; font-weight: 600; }
+  .header-title p { font-size: 0.75rem; color: #888; margin-top: 2px; }
+  .auth-btn { font-size: 0.75rem; padding: 6px 14px; border-radius: 8px; border: 1px solid #ddd; background: #fff; color: #555; cursor: pointer; transition: all .15s; }
+  .auth-btn:hover { border-color: #aaa; color: #222; }
+  .auth-user { display: flex; align-items: center; gap: 8px; }
+  .auth-email { font-size: 0.72rem; color: #999; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .tab { padding: 7px 18px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; color: #888; cursor: pointer; font-size: 0.85rem; transition: all .15s; }
+  .tab.active { border-color: #555; color: #111; font-weight: 500; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .filters { display: flex; flex-direction: column; gap: 10px; margin-bottom: 1.25rem; }
+  .filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .filter-label { font-size: 0.72rem; color: #aaa; min-width: 44px; }
+  .fbtn { padding: 5px 11px; border-radius: 8px; border: 1px solid #e0e0e0; background: #fff; color: #888; cursor: pointer; font-size: 0.75rem; transition: all .15s; white-space: nowrap; }
+  .fbtn:hover { border-color: #bbb; }
+  .fbtn.active { background: #eef3ff; border-color: #93b4f5; color: #2c5fe6; font-weight: 500; }
+  .level-input { width: 72px; padding: 5px 8px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 0.75rem; background: #fff; color: #333; outline: none; }
+  .level-input:focus { border-color: #93b4f5; }
+  .reset-btn { font-size: 0.72rem; color: #bbb; cursor: pointer; background: none; border: none; }
+  .reset-btn:hover { color: #888; }
+  .search-wrap { position: relative; margin-bottom: 1rem; }
+  .search-input { width: 100%; padding: 9px 36px 9px 14px; border-radius: 10px; border: 1px solid #e0e0e0; font-size: 0.82rem; background: #fff; color: #333; outline: none; }
+  .search-input:focus { border-color: #93b4f5; }
+  .search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 0.8rem; color: #bbb; padding: 0; }
+  .search-clear:hover { color: #888; }
+  .summary { font-size: 0.72rem; color: #aaa; margin-bottom: 1rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 10px; }
+  .card { background: #fff; border: 1px solid #ebebeb; border-radius: 12px; padding: 12px 13px; transition: border-color .15s, opacity .2s; position: relative; }
+  .card:hover { border-color: #d0d0d0; }
+  .card.dimmed { opacity: 0.28; }
+  .card.collected { border-color: #86c99a; background: #f4fbf6; }
+  .card-name { font-size: 0.82rem; font-weight: 500; color: #111; margin-bottom: 7px; padding-right: 22px; line-height: 1.4; }
+  .badges { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 0.65rem; font-weight: 500; }
+  .badge-always  { background: #f2f2f0; color: #888; }
+  .badge-sun     { background: #fff8e1; color: #9a6e00; }
+  .badge-rain    { background: #e3f6f9; color: #1a7a8a; }
+  .badge-rainbow { background: #f0ecff; color: #5b3ec8; }
+  .badge-season  { background: #fff1ec; color: #c04e1a; }
+  .badge-lv      { background: #f2f2f0; color: #999; }
+  .badge-event   { background: #fff1ec; color: #c04e1a; }
+  .card-meta { font-size: 0.72rem; color: #aaa; line-height: 1.8; }
+  .check-btn { position: absolute; top: 10px; right: 10px; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #d0d0d0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: transparent; transition: all .15s; }
+  .check-btn:hover { border-color: #86c99a; }
+  .check-btn.checked { background: #52a96e; border-color: #52a96e; color: #fff; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 100; }
+  .modal { background: #fff; border-radius: 16px; padding: 1.5rem; width: 300px; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+  .modal h2 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+  .modal p  { font-size: 0.75rem; color: #999; margin-bottom: 1rem; }
+  .modal input { width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 0.82rem; outline: none; margin-bottom: 10px; }
+  .modal input:focus { border-color: #93b4f5; }
+  .modal-submit { width: 100%; padding: 9px; border-radius: 8px; background: #111; color: #fff; border: none; font-size: 0.82rem; cursor: pointer; }
+  .modal-submit:hover { background: #333; }
+  .modal-submit:disabled { opacity: .5; cursor: not-allowed; }
+  .modal-close { width: 100%; padding: 8px; border-radius: 8px; background: none; border: none; font-size: 0.8rem; color: #bbb; cursor: pointer; margin-top: 6px; }
+  .modal-close:hover { color: #888; }
+  .modal-sent { text-align: center; padding: 1.5rem 0; font-size: 0.85rem; color: #52a96e; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="header-title">
+      <h1>두근두근타운 도감</h1>
+      <p>어류 · 조류 · 곤충</p>
+    </div>
+    <div id="auth-area">
+      <button class="auth-btn" onclick="openModal()">로그인</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('fish', this)">🐟 어류</button>
+    <button class="tab" onclick="switchTab('bird', this)">🐦 조류</button>
+    <button class="tab" onclick="switchTab('bug', this)">🦋 곤충</button>
+  </div>
+
+  <div class="search-wrap">
+    <input class="search-input" type="text" id="search-input" placeholder="이름으로 검색..." oninput="render()" />
+    <button class="search-clear" onclick="clearSearch()">✕</button>
+  </div>
+
+  <div class="filters">
+    <div class="filter-row">
+      <span class="filter-label">날씨</span>
+      <button class="fbtn active" id="w-all"     onclick="setWeather('all')">전체</button>
+      <button class="fbtn"        id="w-sun"      onclick="setWeather('sun')">☀️ 맑음</button>
+      <button class="fbtn"        id="w-rain"     onclick="setWeather('rain')">🌧️ 비·눈</button>
+      <button class="fbtn"        id="w-rainbow"  onclick="setWeather('rainbow')">🌈 무지개</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">시간대</span>
+      <button class="fbtn active" id="t-all" onclick="setTime('all')">전체</button>
+      <button class="fbtn"        id="t-0"   onclick="setTime('0')">🌙 0–6시</button>
+      <button class="fbtn"        id="t-6"   onclick="setTime('6')">🌅 6–12시</button>
+      <button class="fbtn"        id="t-12"  onclick="setTime('12')">☀️ 12–18시</button>
+      <button class="fbtn"        id="t-18"  onclick="setTime('18')">🌆 18–24시</button>
+    </div>
+    <div class="filter-row" id="place-row">
+      <span class="filter-label">장소</span>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">내 레벨</span>
+      <input class="level-input" type="number" id="level-input" min="1" max="14" placeholder="예: 5" oninput="render()" />
+      <button class="reset-btn" onclick="resetLevel()">초기화</button>
+    </div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <h2>로그인</h2>
+    <p>수집 체크 저장을 위해 이메일 로그인이 필요해요</p>
+    <div id="modal-form">
+      <input type="email" id="email-input" placeholder="이메일 주소" onkeydown="if(event.key==='Enter') submitLogin()" />
+      <button class="modal-submit" id="modal-submit-btn" onclick="submitLogin()">매직 링크 받기</button>
+    </div>
+    <div class="modal-sent hidden" id="modal-sent">✉️ 이메일을 확인해 주세요!</div>
+    <button class="modal-close" onclick="closeModal()">닫기</button>
+  </div>
+</div>
+
+<script>
+// ===================== DATA =====================
+var DATA = {
+fish: [
+  {name:"얼음 결정 킹크랩",time:"항상",weather:["sun","rain","rainbow"],place:"구해",shadow:"대",price:215,level:0,season:true},
+  {name:"얼음 결정 개복치",time:"항상",weather:["sun","rain","rainbow"],place:"구해",shadow:"대",price:215,level:0,season:true},
+  {name:"얼음 결정 복어",time:"항상",weather:["sun","rain","rainbow"],place:"구해",shadow:"대",price:155,level:0,season:true},
+  {name:"얼음 결정 해마",time:"항상",weather:["sun","rain","rainbow"],place:"구해",shadow:"중",price:100,level:0,season:true},
+  {name:"얼음 결정 고래상어",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",shadow:"대",price:320,level:0,season:true},
+  {name:"민물배스",time:"항상",weather:["sun","rain","rainbow"],place:"강",shadow:"중",price:75,level:1},
+  {name:"하늘종개",time:"항상",weather:["sun","rain","rainbow"],place:"거목강",shadow:"소",price:50,level:1},
+  {name:"바벨",time:"항상",weather:["sun","rain","rainbow"],place:"얕은 강",shadow:"중",price:75,level:1},
+  {name:"큰얼룩배스",time:"항상",weather:["sun","rain","rainbow"],place:"노을강",shadow:"소",price:50,level:1},
+  {name:"미노우",time:"항상",weather:["sun","rain","rainbow"],place:"고요한 강",shadow:"소",price:50,level:1},
+  {name:"왕새우",time:"항상",weather:["sun","rain","rainbow"],place:"강",shadow:"소",price:50,level:1},
+  {name:"틸라피아",time:"항상",weather:["sun","rain","rainbow"],place:"강",shadow:"집어기",price:320,level:1},
+  {name:"유럽처브",time:"항상",weather:["sun","rain","rainbow"],place:"호수",shadow:"중",price:75,level:1},
+  {name:"텐치",time:"항상",weather:["sun","rain","rainbow"],place:"숲속 호수",shadow:"소",price:50,level:1},
+  {name:"극지연어",time:"항상",weather:["sun","rain","rainbow"],place:"온천산 호수",shadow:"중",price:105,level:1},
+  {name:"붕어",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",shadow:"중",price:75,level:1},
+  {name:"유럽백조어",time:"항상",weather:["sun","rain","rainbow"],place:"호수",shadow:"소",price:50,level:1},
+  {name:"백조어",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",shadow:"소",price:50,level:1},
+  {name:"유럽참개구리",time:"항상",weather:["sun","rain","rainbow"],place:"호수",shadow:"집어기",price:320,level:1},
+  {name:"정어리",time:"항상",weather:["sun","rain","rainbow"],place:"바다",shadow:"소",price:50,level:1},
+  {name:"배스",time:"항상",weather:["sun","rain","rainbow"],place:"바다",shadow:"중",price:75,level:1},
+  {name:"가다랑어",time:"항상",weather:["sun","rain","rainbow"],place:"바다",shadow:"대",price:210,level:1},
+  {name:"갈치",time:"항상",weather:["sun","rain","rainbow"],place:"잔잔한 바다",shadow:"대",price:105,level:1},
+  {name:"바다새우",time:"항상",weather:["sun","rain","rainbow"],place:"동해",shadow:"소",price:50,level:1},
+  {name:"전갱이",time:"항상",weather:["sun","rain","rainbow"],place:"고래바다",shadow:"소",price:50,level:1},
+  {name:"바다가시고기",time:"항상",weather:["sun","rain","rainbow"],place:"구해",shadow:"소",price:50,level:2},
+  {name:"노랑촉수",time:"항상",weather:["sun","rain","rainbow"],place:"바다낚시",shadow:"반짝",price:320,level:2},
+  {name:"대서양은상어",time:"항상",weather:["sun","rain","rainbow"],place:"바다",shadow:"집어기",price:320,level:2},
+  {name:"돌마자",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",shadow:"소",price:100,level:2},
+  {name:"머드개복치",time:"6-24",weather:["sun","rain","rainbow"],place:"숲속 호수",shadow:"소",price:100,level:2},
+  {name:"바다빙어",time:"항상",weather:["sun","rain","rainbow"],place:"초원 호수",shadow:"소",price:100,level:2},
+  {name:"매화농어",time:"12-24",weather:["sun","rain","rainbow"],place:"온천산 호수",shadow:"소",price:100,level:2},
+  {name:"노란전갱이",time:"항상",weather:["sun","rain","rainbow"],place:"잔잔한 바다",shadow:"중",price:155,level:3},
+  {name:"해마",time:"0-18",weather:["sun","rain","rainbow"],place:"고래바다",shadow:"소",price:100,level:3},
+  {name:"아귀",time:"항상",weather:["sun","rain","rainbow"],place:"바다낚시",shadow:"반짝",price:320,level:3},
+  {name:"민물잰더",time:"항상",weather:["sun","rainbow"],place:"거목강",shadow:"중",price:230,level:3},
+  {name:"홍합",time:"항상",weather:["rain","rainbow"],place:"근교 호수",shadow:"소",price:100,level:3},
+  {name:"올챙이",time:"항상",weather:["rain","rainbow"],place:"온천산 호수",shadow:"소",price:100,level:3},
+  {name:"유럽민물가재",time:"0-12 18-24",weather:["sun","rain","rainbow"],place:"숲속 호수",shadow:"소",price:100,level:3},
+  {name:"소라게",time:"항상",weather:["sun","rain","rainbow"],place:"동해",shadow:"소",price:100,level:3},
+  {name:"흰동가리",time:"항상",weather:["sun","rain","rainbow"],place:"구해",shadow:"소",price:100,level:3},
+  {name:"참문어",time:"항상",weather:["sun","rain","rainbow"],place:"바다낚시",shadow:"반짝",price:320,level:4},
+  {name:"대서양연어",time:"0-6 12-24",weather:["sun","rain","rainbow"],place:"고래바다",shadow:"중",price:155,level:4},
+  {name:"대서양난쟁이문어",time:"항상",weather:["sun","rain","rainbow"],place:"잔잔한 바다",shadow:"소",price:150,level:4},
+  {name:"유럽잉어",time:"12-24",weather:["sun","rainbow"],place:"노을강",shadow:"중",price:230,level:4},
+  {name:"민물대구",time:"12-24",weather:["sun","rain","rainbow"],place:"고요한 강",shadow:"중",price:230,level:4},
+  {name:"큰입배스",time:"항상",weather:["sun","rainbow"],place:"숲속 호수",shadow:"중",price:230,level:4},
+  {name:"민물게",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",shadow:"소",price:100,level:4},
+  {name:"망둥어",time:"6-18",weather:["sun","rain","rainbow"],place:"동해",shadow:"소",price:150,level:4},
+  {name:"대문짝넙치",time:"항상",weather:["sun","rain","rainbow"],place:"바다낚시",shadow:"반짝",price:320,level:4},
+  {name:"유럽가자미",time:"0-6 18-24",weather:["sun","rain","rainbow"],place:"구해",shadow:"중",price:230,level:4},
+  {name:"레드벨리피라냐",time:"항상",weather:["sun","rain","rainbow"],place:"거목강",shadow:"중",price:230,level:4},
+  {name:"나비잉어",time:"항상",weather:["rain","rainbow"],place:"초원 호수",shadow:"대",price:320,level:4},
+  {name:"민물베도라치",time:"항상",weather:["sun","rain","rainbow"],place:"노을강",shadow:"소",price:150,level:5},
+  {name:"송어",time:"0-6 18-24",weather:["sun","rainbow"],place:"초원 호수",shadow:"중",price:230,level:5},
+  {name:"루드",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",shadow:"소",price:150,level:5},
+  {name:"대서양고등어",time:"12-24",weather:["sun","rainbow"],place:"고래바다",shadow:"소",price:150,level:5},
+  {name:"유럽가재",time:"0-6 18-24",weather:["sun","rain","rainbow"],place:"잔잔한 바다",shadow:"중",price:230,level:5},
+  {name:"유럽날오징어",time:"항상",weather:["sun","rain","rainbow"],place:"바다낚시",shadow:"반짝",price:320,level:5},
+  {name:"큰진주조개",time:"항상",weather:["rainbow"],place:"숲속 호수",shadow:"중",price:380,level:6},
+  {name:"복어",time:"12-24",weather:["sun","rain","rainbow"],place:"구해",shadow:"중",price:230,level:6},
+  {name:"첨 연어",time:"항상",weather:["rainbow"],place:"고요한 강",shadow:"소",price:150,level:6},
+  {name:"사루기",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",shadow:"중",price:230,level:6},
+  {name:"등불성대",time:"항상",weather:["rainbow"],place:"동해",shadow:"중",price:380,level:6},
+  {name:"두툽상어",time:"항상",weather:["sun","rain","rainbow"],place:"바다낚시",shadow:"반짝",price:535,level:6},
+  {name:"큰가시고기",time:"항상",weather:["rain","rainbow"],place:"얕은 강",shadow:"소",price:150,level:7},
+  {name:"줄무늬송사리",time:"0-6 12-24",weather:["sun","rainbow"],place:"근교 호수",shadow:"소",price:150,level:7},
+  {name:"독중개",time:"6-24",weather:["rain","rainbow"],place:"온천산 호수",shadow:"소",price:150,level:7},
+  {name:"산갈치",time:"6-18",weather:["sun","rain","rainbow"],place:"바다낚시",shadow:"반짝",price:535,level:7},
+  {name:"검은점돔",time:"0-6 18-24",weather:["rain","rainbow"],place:"잔잔한 바다",shadow:"중",price:230,level:7},
+  {name:"유럽장어",time:"6-24",weather:["rainbow"],place:"구해",shadow:"중",price:380,level:7},
+  {name:"황금 킹크랩",time:"항상",weather:["rainbow"],place:"바다낚시",shadow:"반짝",price:850,level:8},
+  {name:"펄고기",time:"0-12",weather:["sun","rainbow"],place:"근교 호수",shadow:"소",price:250,level:8},
+  {name:"북유럽파란가재",time:"0-6 18-24",weather:["sun","rain","rainbow"],place:"숲속 호수",shadow:"소",price:250,level:8},
+  {name:"금붕어",time:"6-24",weather:["rain","rainbow"],place:"초원 호수",shadow:"소",price:250,level:8},
+  {name:"킹크랩",time:"6-24",weather:["rainbow"],place:"고래바다",shadow:"대",price:535,level:8},
+  {name:"해덕대구",time:"0-6 12-24",weather:["sun","rainbow"],place:"동해",shadow:"중",price:230,level:8},
+  {name:"후첸",time:"0-6 12-24",weather:["rainbow"],place:"거목강",shadow:"중",price:380,level:9},
+  {name:"강꼬치고기",time:"0-6 18-24",weather:["rain","rainbow"],place:"근교 호수",shadow:"중",price:610,level:9},
+  {name:"펌프킨시드",time:"6-24",weather:["sun","rainbow"],place:"온천산 호수",shadow:"소",price:250,level:9},
+  {name:"개복치",time:"0-12",weather:["sun","rain","rainbow"],place:"동해",shadow:"대",price:850,level:9},
+  {name:"참다랑어",time:"6-18",weather:["rainbow"],place:"잔잔한 바다",shadow:"대",price:850,level:9},
+  {name:"붉은개복치",time:"0-6 18-24",weather:["sun","rain","rainbow"],place:"바다낚시",shadow:"반짝",price:850,level:9},
+  {name:"유럽메기",time:"0-6 18-24",weather:["sun","rainbow"],place:"초원 호수",shadow:"중",price:610,level:10},
+  {name:"북극곤들매기",time:"12-24",weather:["rain","rainbow"],place:"숲속 호수",shadow:"중",price:610,level:10},
+  {name:"블루길",time:"0-6 18-24",weather:["sun","rainbow"],place:"온천산 호수",shadow:"소",price:395,level:10},
+  {name:"귀상어",time:"0-6 18-24",weather:["rainbow"],place:"구해",shadow:"대",price:850,level:10},
+  {name:"황새치",time:"6-18",weather:["rainbow"],place:"고래바다",shadow:"대",price:850,level:10},
+  {name:"청상아리",time:"6-18",weather:["rainbow"],place:"바다낚시",shadow:"반짝",price:850,level:10},
+  {name:"사자머리금붕어",time:"항상",weather:["rainbow"],place:"온천산 호수",shadow:"소",price:395,level:11},
+  {name:"골드아로와나",time:"0-12 18-24",weather:["rainbow"],place:"초원 호수",shadow:"소",price:395,level:11},
+  {name:"줄자돔",time:"12-24",weather:["sun","rainbow"],place:"잔잔한 바다",shadow:"중",price:610,level:11},
+  {name:"고래상어",time:"0-12 18-24",weather:["sun","rainbow"],place:"바다낚시",shadow:"반짝",price:850,level:11},
+  {name:"베타",time:"12-24",weather:["rain","rainbow"],place:"숲속 호수",shadow:"소",price:395,level:12},
+  {name:"엔젤피시",time:"0-6 18-24",weather:["rainbow"],place:"근교 호수",shadow:"중",price:610,level:12},
+  {name:"해파리",time:"0-6 12-24",weather:["rain","rainbow"],place:"바다낚시",shadow:"반짝",price:850,level:12},
+  {name:"바다거북",time:"12-24",weather:["rainbow"],place:"고래바다",shadow:"대",price:850,level:12},
+  {name:"만새기",time:"6-18",weather:["rainbow"],place:"구해",shadow:"대",price:850,level:12},
+  {name:"양쥐돔",time:"0-6 12-24",weather:["rain","rainbow"],place:"구해",shadow:"중",price:610,level:13},
+  {name:"쏠배감펭",time:"0-12",weather:["rain","rainbow"],place:"고래바다",shadow:"중",price:610,level:13},
+  {name:"아주르담셀",time:"12-24",weather:["sun","rainbow"],place:"잔잔한 바다",shadow:"소",price:395,level:14},
+  {name:"레나르디놀래기",time:"6-24",weather:["sun","rainbow"],place:"동해",shadow:"중",price:610,level:14}
+],
+bird: [
+  {name:"겨울 옷 큰홍학",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호숫가",level:0,season:true},
+  {name:"겨울 옷 홍머리오리",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",level:0,season:true},
+  {name:"겨울 옷 흰비오리",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",level:0,season:true},
+  {name:"겨울 옷 청둥오리",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",level:0,season:true},
+  {name:"꼬까울새",time:"항상",weather:["sun","rain","rainbow"],place:"도심",level:1},
+  {name:"노랑배박새",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:1},
+  {name:"굴뚝새",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:1},
+  {name:"멋쟁이새",time:"항상",weather:["sun","rain","rainbow"],place:"도시 근교",level:1},
+  {name:"푸른머리되새",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:1},
+  {name:"분홍가슴비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"도심",level:1},
+  {name:"염주비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"홈",level:1},
+  {name:"얼룩비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"어촌",level:1},
+  {name:"큰홍학",time:"항상",weather:["sun","rain","rainbow"],place:"물가",level:1},
+  {name:"청둥오리",time:"항상",weather:["sun","rain","rainbow"],place:"호수",level:1},
+  {name:"청금강앵무",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:1,event:true},
+  {name:"청공작",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:1,event:true},
+  {name:"오목눈이",time:"항상",weather:["sun","rain","rainbow"],place:"블랑코 머리 위",level:1},
+  {name:"동고비",time:"항상",weather:["sun","rain","rainbow"],place:"어촌",level:2},
+  {name:"수염오목눈이",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:2},
+  {name:"빨간머리때까치",time:"항상",weather:["sun","rain","rainbow"],place:"도시 근교",level:2},
+  {name:"웡가비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:2},
+  {name:"분홍목녹색비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:2},
+  {name:"홍머리오리",time:"항상",weather:["sun","rain","rainbow"],place:"강",level:2},
+  {name:"바다갈매기",time:"항상",weather:["sun","rain","rainbow"],place:"해변",level:2},
+  {name:"유럽꾀꼬리",time:"항상",weather:["sun","rain","rainbow"],place:"홈",level:3},
+  {name:"녹자작",time:"항상",weather:["sun","rain","rainbow"],place:"어촌",level:3},
+  {name:"검은턱오목눈이",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:3},
+  {name:"홍금강앵무",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:3,event:true},
+  {name:"황오리",time:"항상",weather:["sun","rain","rainbow"],place:"근교 호수",level:3},
+  {name:"호사북방오리",time:"항상",weather:["sun","rain","rainbow"],place:"강",level:3},
+  {name:"오두앵갈매기",time:"항상",weather:["sun","rain","rainbow"],place:"고래바다",level:3},
+  {name:"유럽가마우지",time:"항상",weather:["sun","rain","rainbow"],place:"바다",level:3},
+  {name:"알락할미새",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:4},
+  {name:"회색머리붉은참새",time:"항상",weather:["sun","rainbow"],place:"어촌",level:4},
+  {name:"솔양진이",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:4},
+  {name:"노란머리바우어새",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:4},
+  {name:"황금과일비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:4},
+  {name:"은계",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:4},
+  {name:"흰비오리",time:"항상",weather:["sun","rain","rainbow"],place:"숲속 호수",level:4},
+  {name:"노랑배딱새",time:"항상",weather:["sun","rain","rainbow"],place:"어촌",level:5},
+  {name:"유럽벌잡이새",time:"항상",weather:["rain","rainbow"],place:"온천산",level:5},
+  {name:"초록금강앵무",time:"항상",weather:["sun","rainbow"],place:"이벤트",level:5,event:true},
+  {name:"올리브비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:5},
+  {name:"작은홍학",time:"항상",weather:["rain","rainbow"],place:"숲속 호수",level:5},
+  {name:"검정제비갈매기",time:"항상",weather:["sun","rain","rainbow"],place:"구해",level:5},
+  {name:"콩새",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:6},
+  {name:"황금가슴비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"어촌",level:6},
+  {name:"붉은뺨가마우지",time:"항상",weather:["sun","rain","rainbow"],place:"구해",level:6},
+  {name:"칡부엉이",time:"항상",weather:["sun","rainbow"],place:"온천산",level:6},
+  {name:"푸른박새",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:7},
+  {name:"잠부과일비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"도시 근교",level:7},
+  {name:"제비갈매기",time:"항상",weather:["rainbow"],place:"동해",level:7},
+  {name:"황조롱이",time:"항상",weather:["sun","rainbow"],place:"숲",level:7},
+  {name:"히아신스금강앵무",time:"항상",weather:["rain","rainbow"],place:"이벤트",level:7,event:true},
+  {name:"동부 파랑새",time:"항상",weather:["rain","rainbow"],place:"도시 근교",level:8},
+  {name:"홍방울새",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:8},
+  {name:"분홍비둘기",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:8},
+  {name:"매",time:"항상",weather:["rain","rainbow"],place:"온천산",level:8},
+  {name:"극락풍금조",time:"항상",weather:["rainbow"],place:"도시 근교",level:9},
+  {name:"아메리카홍학",time:"항상",weather:["rainbow"],place:"꽃밭",level:9},
+  {name:"흰머리오리",time:"항상",weather:["rain","rainbow"],place:"온천산",level:9},
+  {name:"황제가마우지",time:"항상",weather:["sun","rain","rainbow"],place:"동해",level:9},
+  {name:"녹공작",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:9,event:true},
+  {name:"아조레스멋쟁이새",time:"항상",weather:["rainbow"],place:"어촌",level:10},
+  {name:"파랑딱새",time:"항상",weather:["rainbow"],place:"숲",level:10},
+  {name:"비둘기조롱이",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:10},
+  {name:"수리부엉이",time:"항상",weather:["rain","rainbow"],place:"숲",level:10},
+  {name:"가창오리",time:"항상",weather:["rainbow"],place:"온천산",level:11},
+  {name:"쇠찌르레기",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:11},
+  {name:"푸른머리비둘기",time:"0-6 12-24",weather:["sun","rainbow"],place:"교외",level:11},
+  {name:"잉카제비갈매기",time:"6-24",weather:["rain","rainbow"],place:"구해",level:11},
+  {name:"코뿔바다오리",time:"0-12 18-24",weather:["sun","rainbow"],place:"고래바다",level:12},
+  {name:"붉은눈썹핀치",time:"항상",weather:["rainbow"],place:"온천산",level:12},
+  {name:"푸른발얼가니새",time:"항상",weather:["rain","rainbow"],place:"바다",level:12},
+  {name:"흰올빼미",time:"12-24",weather:["sun","rain","rainbow"],place:"숲",level:12},
+  {name:"큰고니",time:"항상",weather:["sun","rainbow"],place:"시외호",level:13},
+  {name:"흑고니",time:"항상",weather:["rain","rainbow"],place:"시외호",level:13},
+  {name:"먹황새",time:"0-6 12-24",weather:["sun","rain","rainbow"],place:"초원",level:14},
+  {name:"안경올빼미",time:"0-12",weather:["sun","rain","rainbow"],place:"숲",level:14}
+],
+bug: [
+  {name:"얼음 결정 진주네발나비",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:0,season:true},
+  {name:"얼음 결정 삼색청띠제비나비",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:0,season:true},
+  {name:"얼음 결정 알렉산더비단나비",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:0,season:true},
+  {name:"얼음 결정 슬코스키몰포나비",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:0,season:true},
+  {name:"얼음 결정 멜포메네길쭉나비",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:0,season:true},
+  {name:"호랑나비",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:1},
+  {name:"유럽갈고리나비",time:"항상",weather:["sun","rain","rainbow"],place:"도시",level:1},
+  {name:"멧노랑나비",time:"항상",weather:["sun","rain","rainbow"],place:"도시 근교",level:1},
+  {name:"배추흰나비",time:"항상",weather:["sun","rain","rainbow"],place:"어촌",level:1},
+  {name:"아폴로모시나비",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:1,event:true},
+  {name:"붉은고리호랑나비",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:1,event:true},
+  {name:"슬코스키몰포나비",time:"항상",weather:["sun","rain","rainbow"],place:"유인기 특산품",level:1},
+  {name:"아스파라거스벌레",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:1},
+  {name:"오아시스메뚜기",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:1},
+  {name:"별노린재",time:"항상",weather:["sun","rain","rainbow"],place:"홈",level:1},
+  {name:"큰고추잠자리",time:"항상",weather:["sun","rain","rainbow"],place:"물가",level:1},
+  {name:"연푸른부전나비",time:"항상",weather:["sun","rain","rainbow"],place:"도심",level:2},
+  {name:"녹색호랑풍뎅이",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:2},
+  {name:"말벌호랑하늘소",time:"항상",weather:["sun","rain","rainbow"],place:"숲",level:2},
+  {name:"파란꽃풍뎅이",time:"항상",weather:["rain","rainbow"],place:"홈",level:2},
+  {name:"망치다리메뚜기",time:"항상",weather:["sun","rain","rainbow"],place:"어촌",level:2},
+  {name:"칠성 무당벌레",time:"항상",weather:["rain","rainbow"],place:"도시 근교",level:2},
+  {name:"넉점박이잠자리",time:"항상",weather:["rain","rainbow"],place:"근교 호수",level:2},
+  {name:"호박벌",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:2},
+  {name:"붉은목제비나비",time:"0-12 18-24",weather:["sun","rain","rainbow"],place:"홈",level:3},
+  {name:"홍날개",time:"항상",weather:["sun","rain","rainbow"],place:"온천산",level:3},
+  {name:"분홍색 철써기",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:3,event:true},
+  {name:"여치",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:3},
+  {name:"흰점꼬리털벌",time:"6-24",weather:["sun","rain","rainbow"],place:"숲",level:3},
+  {name:"개미",time:"항상",weather:["sun","rain","rainbow"],place:"어촌",level:3},
+  {name:"보라네발나비",time:"0-6 12-24",weather:["sun","rainbow"],place:"꽃밭",level:3},
+  {name:"긴꼬리산누에나방",time:"6-24",weather:["sun","rainbow"],place:"도시 근교",level:3},
+  {name:"표범무늬네발나비",time:"0-12 18-24",weather:["rain","rainbow"],place:"어촌",level:4},
+  {name:"큰줄무늬메뚜기",time:"0-6 12-24",weather:["sun","rainbow"],place:"도시 근교",level:4},
+  {name:"사성 무당벌레",time:"항상",weather:["rain","rainbow"],place:"온천산",level:4},
+  {name:"매미",time:"0-6 12-24",weather:["sun","rain","rainbow"],place:"숲",level:4},
+  {name:"밀잠자리",time:"항상",weather:["rain","rainbow"],place:"강변",level:4},
+  {name:"무지개사마귀",time:"0-6 12-24",weather:["sun","rainbow"],place:"온천산",level:4},
+  {name:"공작나비",time:"항상",weather:["sun","rain","rainbow"],place:"꽃밭",level:5},
+  {name:"신선나비",time:"0-18",weather:["sun","rainbow"],place:"온천산",level:5},
+  {name:"흰마녀밤나방",time:"항상",weather:["sun","rainbow"],place:"이벤트",level:5,event:true},
+  {name:"고산수염하늘소",time:"항상",weather:["rainbow"],place:"숲",level:5},
+  {name:"이색무당벌레",time:"0-6 12-24",weather:["rain","rainbow"],place:"숲",level:5},
+  {name:"파푸아사마귀",time:"항상",weather:["sun","rainbow"],place:"온천산",level:5},
+  {name:"보라벌",time:"항상",weather:["sun","rainbow"],place:"꽃밭",level:5},
+  {name:"녹색날개호랑나비",time:"0-6 18-24",weather:["sun","rain","rainbow"],place:"도시 근교",level:6},
+  {name:"산악사슴벌레",time:"6-24",weather:["rain","rainbow"],place:"숲",level:6},
+  {name:"은빛보석풍뎅이",time:"0-18",weather:["sun","rainbow"],place:"온천산",level:6},
+  {name:"파란노린재",time:"6-18",weather:["sun","rain","rainbow"],place:"어촌",level:6},
+  {name:"물잠자리",time:"항상",weather:["rain","rainbow"],place:"숲속 호수",level:6},
+  {name:"메넬라우스나비",time:"6-24",weather:["sun","rainbow"],place:"숲",level:7},
+  {name:"왕나비",time:"항상",weather:["rain","rainbow"],place:"이벤트",level:7,event:true},
+  {name:"티폰쇠똥구리",time:"0-18",weather:["sun","rain","rainbow"],place:"온천산",level:7},
+  {name:"보석꽃풍뎅이",time:"6-18",weather:["rain","rainbow"],place:"꽃밭",level:7},
+  {name:"황금보석풍뎅이",time:"12-24",weather:["sun","rainbow"],place:"숲",level:7},
+  {name:"찔레잠자리",time:"0-6 12-24",weather:["rainbow"],place:"온천산",level:7},
+  {name:"이사벨라나방",time:"12-24",weather:["sun","rainbow"],place:"숲",level:8},
+  {name:"혜성꼬리나방",time:"0-6 18-24",weather:["sun","rainbow"],place:"도시 근교",level:8},
+  {name:"장수풍뎅이",time:"0-6 18-24",weather:["sun","rainbow"],place:"어촌",level:8},
+  {name:"피카소노린재",time:"0-6 18-24",weather:["sun","rainbow"],place:"꽃밭",level:8},
+  {name:"진주네발나비",time:"0-12",weather:["rain","rainbow"],place:"꽃밭",level:9},
+  {name:"황금귀신사슴벌레",time:"0-6 18-24",weather:["rain","rainbow"],place:"숲",level:9},
+  {name:"무지개사슴벌레",time:"항상",weather:["sun","rain","rainbow"],place:"이벤트",level:9,event:true},
+  {name:"악마꽃사마귀",time:"12-24",weather:["rain","rainbow"],place:"온천산",level:9},
+  {name:"푸른목수벌",time:"0-6 18-24",weather:["rainbow"],place:"어촌",level:9},
+  {name:"헬레나몰포나비",time:"6-18",weather:["rainbow"],place:"꽃밭",level:10},
+  {name:"헤쿠바몰포나비",time:"6-18",weather:["rainbow"],place:"숲",level:10},
+  {name:"헤라클레스풍뎅이",time:"12-24",weather:["sun","rainbow"],place:"온천산",level:10},
+  {name:"사선주머니나방",time:"0-6 18-24",weather:["sun","rainbow"],place:"숲",level:10},
+  {name:"알렉산더비단나비",time:"0-6 18-24",weather:["sun","rainbow"],place:"근교 호수",level:11},
+  {name:"아틀라스풍뎅이",time:"0-6 12-24",weather:["rainbow"],place:"숲",level:11},
+  {name:"십삼성 무당벌레",time:"12-24",weather:["rainbow"],place:"꽃밭",level:11},
+  {name:"난초사마귀",time:"6-18",weather:["rain","rainbow"],place:"온천산",level:11},
+  {name:"삼색청띠제비나비",time:"6-12 18-24",weather:["rain","rainbow"],place:"꽃밭",level:12},
+  {name:"골리앗대왕꽃무지",time:"0-6 18-24",weather:["rainbow"],place:"숲",level:12},
+  {name:"박주가리메뚜기",time:"6-18",weather:["rain","rainbow"],place:"온천산",level:12},
+  {name:"불꽃날개잠자리",time:"6-18",weather:["rainbow"],place:"초원 호수",level:12},
+  {name:"데이다미아몰포나비",time:"12-24",weather:["rainbow"],place:"온천산",level:13},
+  {name:"차이넨시스물잠자리",time:"12-24",weather:["rain","rainbow"],place:"근교 호수",level:13},
+  {name:"유리날개나비",time:"12-24",weather:["rainbow"],place:"꽃밭",level:14},
+  {name:"푸른민달팽이",time:"항상",weather:["rain","rainbow"],place:"숲",level:14}
+]
+}
+
+// ===================== STATE =====================
+var curTab = 'fish'
+var curWeather = 'all'
+var curTime = 'all'
+var curPlace = 'all'
+var curUser = null
+var collected = { fish: new Set(), bird: new Set(), bug: new Set() }
+var sb = null
+
+// ===================== SUPABASE (나중에 로드) =====================
+var SUPABASE_URL  = 'https://onjdyjvhlznyfscuvnld.supabase.co'
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9uamR5anZobHpueWZzY3V2bmxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0NTQ4MDMsImV4cCI6MjA4OTAzMDgwM30.DMAej1Iwmc0P72KkU4XjMsE3Yg2sZVcR3qC6TnXpdgA'
+
+function initSupabase() {
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+    sb.auth.getSession().then(function(res) {
+      curUser = res.data.session ? res.data.session.user : null
+      updateAuthUI()
+      if (curUser) loadCollection()
+    })
+    sb.auth.onAuthStateChange(function(event, session) {
+      curUser = session ? session.user : null
+      updateAuthUI()
+      if (curUser) loadCollection()
+      else {
+        collected = { fish: new Set(), bird: new Set(), bug: new Set() }
+        render()
+      }
+    })
+  } catch(e) {
+    console.warn('Supabase 초기화 실패 (로컬 환경에서는 정상)', e)
+  }
+}
+
+// ===================== AUTH UI =====================
+function updateAuthUI() {
+  var area = document.getElementById('auth-area')
+  if (curUser) {
+    area.innerHTML = '<div class="auth-user"><span class="auth-email">' + curUser.email + '</span><button class="auth-btn" onclick="logout()">로그아웃</button></div>'
+  } else {
+    area.innerHTML = '<button class="auth-btn" onclick="openModal()">로그인</button>'
+  }
+  render()
+}
+
+function logout() {
+  if (!sb) return
+  sb.auth.signOut()
+}
+
+function submitLogin() {
+  if (!sb) { alert('로그인 기능은 웹사이트에서만 동작해요 (GitHub Pages 배포 후 사용 가능)'); return }
+  var email = document.getElementById('email-input').value.trim()
+  if (!email) return
+  var btn = document.getElementById('modal-submit-btn')
+  btn.disabled = true
+  btn.textContent = '전송 중...'
+  sb.auth.signInWithOtp({
+    email: email,
+    options: { emailRedirectTo: location.origin + location.pathname }
+  }).then(function(res) {
+    if (!res.error) {
+      document.getElementById('modal-form').classList.add('hidden')
+      document.getElementById('modal-sent').classList.remove('hidden')
+    } else {
+      btn.disabled = false
+      btn.textContent = '매직 링크 받기'
+      alert('오류: ' + res.error.message)
+    }
+  })
+}
+
+// ===================== COLLECTION =====================
+function loadCollection() {
+  if (!sb) return
+  sb.from('user_collection').select('tab, item_name').then(function(res) {
+    if (!res.data) return
+    collected = { fish: new Set(), bird: new Set(), bug: new Set() }
+    res.data.forEach(function(r) { if (collected[r.tab]) collected[r.tab].add(r.item_name) })
+    render()
+  })
+}
+
+function toggleCollect(name) {
+  if (!curUser) { openModal(); return }
+  if (!sb) return
+  var tab = curTab
+  var already = collected[tab].has(name)
+  if (already) {
+    collected[tab].delete(name)
+    sb.from('user_collection').delete().match({ user_id: curUser.id, tab: tab, item_name: name }).then(function() { render() })
+  } else {
+    collected[tab].add(name)
+    sb.from('user_collection').upsert({ user_id: curUser.id, tab: tab, item_name: name }, { onConflict: 'user_id,tab,item_name' }).then(function() { render() })
+  }
+  render()
+}
+
+// ===================== FILTERS =====================
+function switchTab(tab, el) {
+  curTab = tab
+  curPlace = 'all'
+  document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active') })
+  el.classList.add('active')
+  buildPlaceFilter()
+  render()
+}
+
+function setWeather(w) {
+  curWeather = w
+  ;['all','sun','rain','rainbow'].forEach(function(x) {
+    document.getElementById('w-'+x).classList.toggle('active', x === w)
+  })
+  render()
+}
+
+function setTime(t) {
+  curTime = t
+  ;['all','0','6','12','18'].forEach(function(x) {
+    document.getElementById('t-'+x).classList.toggle('active', x === t)
+  })
+  render()
+}
+
+function setPlace(p) {
+  curPlace = p
+  buildPlaceFilter()
+  render()
+}
+
+function clearSearch() {
+  document.getElementById('search-input').value = ''
+  render()
+}
+
+function resetLevel() {
+  document.getElementById('level-input').value = ''
+  render()
+}
+
+function buildPlaceFilter() {
+  var raw = DATA[curTab].map(function(d) { return d.place.split('-')[0].trim() })
+  var seen = {}
+  var places = ['all']
+  raw.forEach(function(p) { if (!seen[p]) { seen[p] = true; places.push(p) } })
+  places.sort(function(a, b) { return a === 'all' ? -1 : b === 'all' ? 1 : a.localeCompare(b) })
+
+  var row = document.getElementById('place-row')
+  row.innerHTML = '<span class="filter-label">장소</span>'
+  places.forEach(function(p) {
+    var btn = document.createElement('button')
+    btn.className = 'fbtn' + (curPlace === p ? ' active' : '')
+    btn.textContent = p === 'all' ? '전체' : p
+    btn.onclick = function() { setPlace(p) }
+    row.appendChild(btn)
+  })
+}
+
+// ===================== TIME MATCH =====================
+var TIME_RANGES = { '0':[[0,6]], '6':[[6,12]], '12':[[12,18]], '18':[[18,24]] }
+
+function timeMatchSlot(timeStr, slot) {
+  if (slot === 'all') return true
+  if (timeStr === '항상') return false
+  var ranges = TIME_RANGES[slot]
+  var parts = timeStr.trim().split(' ')
+  for (var i = 0; i < parts.length; i++) {
+    var se = parts[i].split('-').map(Number)
+    var s = se[0], e = se[1]
+    for (var j = 0; j < ranges.length; j++) {
+      var rs = ranges[j][0], re = ranges[j][1]
+      if (s < e) { if (s < re && e > rs) return true }
+      else        { if (rs < e || re > s) return true }
+    }
+  }
+  return false
+}
+
+// ===================== RENDER =====================
+function render() {
+  var myLv = parseInt(document.getElementById('level-input').value) || 0
+  var searchQ = document.getElementById('search-input').value.trim().toLowerCase()
+  var data = DATA[curTab]
+
+  var filtered = data.filter(function(d) {
+    if (searchQ && d.name.toLowerCase().indexOf(searchQ) === -1) return false
+    if (curWeather !== 'all') {
+      // 날씨가 3개 다 있는 항목(= 모든 날씨 가능)은 '전체' 탭에서만 표시
+      if (d.weather.length === 3) return false
+      if (d.weather.indexOf(curWeather) === -1) return false
+    }
+    if (curPlace !== 'all' && d.place.indexOf(curPlace) !== 0) return false
+    return true
+  })
+
+  function canSee(d) {
+    var lvOk = myLv > 0 ? (d.level === 0 || d.level <= myLv) : true
+    return lvOk && timeMatchSlot(d.time, curTime)
+  }
+
+  var available = filtered.filter(canSee)
+  var unavail   = filtered.filter(function(d) { return !canSee(d) })
+  var col = collected[curTab]
+
+  var summary = document.getElementById('summary')
+  summary.textContent = '전체 ' + filtered.length + '종 중 ' + available.length + '종 표시' +
+    (col.size > 0 ? ' · ' + col.size + '종 수집 완료' : '')
+
+  var cards = available.concat(unavail).map(function(d) {
+    return makeCard(d, !canSee(d))
+  })
+  document.getElementById('grid').innerHTML = cards.join('')
+}
+
+function makeCard(d, dimmed) {
+  var isAlways = d.weather.length === 3
+  var col = collected[curTab].has(d.name)
+
+  var weatherBadges = isAlways
+    ? '<span class="badge badge-always">항상</span>'
+    : d.weather.map(function(w) {
+        return w==='sun'  ? '<span class="badge badge-sun">☀️ 맑음</span>' :
+               w==='rain' ? '<span class="badge badge-rain">🌧️ 비·눈</span>' :
+                            '<span class="badge badge-rainbow">🌈 무지개</span>'
+      }).join('')
+
+  var lvBadge = d.level === 0
+    ? (d.season ? '<span class="badge badge-season">시즌</span>' : '')
+    : '<span class="badge badge-lv">Lv.' + d.level + '</span>'
+
+  var evBadge = d.event ? '<span class="badge badge-event">이벤트</span>' : ''
+
+  var checkBtn = curUser
+    ? '<button class="check-btn ' + (col ? 'checked' : '') + '" onclick="toggleCollect(\'' + d.name.replace(/'/g,"\\'") + '\')">✓</button>'
+    : ''
+
+  var fishMeta = d.shadow
+    ? '<div>그림자: ' + d.shadow + ' · 가격: ' + d.price + '</div>' : ''
+
+  return '<div class="card ' + (dimmed ? 'dimmed' : '') + ' ' + (col ? 'collected' : '') + '">' +
+    checkBtn +
+    '<div class="card-name">' + d.name + ' ' + lvBadge + ' ' + evBadge + '</div>' +
+    '<div class="badges">' + weatherBadges + '</div>' +
+    '<div class="card-meta"><div>⏰ ' + d.time + '</div><div>📍 ' + d.place + '</div>' + fishMeta + '</div>' +
+    '</div>'
+}
+
+// ===================== MODAL =====================
+function openModal() {
+  document.getElementById('modal-overlay').classList.remove('hidden')
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('hidden')
+  document.getElementById('modal-form').classList.remove('hidden')
+  document.getElementById('modal-sent').classList.add('hidden')
+  var btn = document.getElementById('modal-submit-btn')
+  btn.disabled = false
+  btn.textContent = '매직 링크 받기'
+  document.getElementById('email-input').value = ''
+}
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal()
+}
+
+// ===================== INIT =====================
+buildPlaceFilter()
+render()
+</script>
+
+<!-- Supabase는 맨 마지막에 로드 → 실패해도 필터는 이미 작동 중 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onload="initSupabase()" onerror="console.warn('Supabase CDN 로드 실패 (로컬 환경)')"></script>
+</body>
+</html>
